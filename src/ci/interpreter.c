@@ -36,80 +36,8 @@ void interpret(Interpreter *intr, Command *commands) {
     Command *current = commands;
     while (current && !intr->had_error) {
         switch (current->type) {
-            case CMD_ADD: {
-                int64_t val_a = current->is_a_immediate ? current->val_a.num_val : intr->variables[(int) current->val_a.base];
-                int64_t val_b = current->is_b_immediate ? current->val_b.num_val : intr->variables[(int) current->val_b.base];
-                intr->variables[(int) current->destination.base] = val_a + val_b;
-
-                current = current->next;
-                break;
-            }
-
-            case CMD_SUB: {
-                int64_t val_a = current->is_a_immediate ? current->val_a.num_val : intr->variables[(int) current->val_a.base];
-                int64_t val_b = current->is_b_immediate? current->val_b.num_val : intr->variables[(int) current->val_b.base];
-                intr->variables[(int) current->destination.base] = val_a - val_b;
-
-                current = current->next;
-                break;
-            }
-
-            case CMD_MOV: {
-                int64_t value = current->is_a_immediate ? current->val_a.num_val: intr->variables[(int) current->val_a.base];
-                intr->variables[(int) current->destination.base] = value;
-
-                current = current->next;
-                break;
-            }
-
-            case CMD_CMP: {
-                int64_t val_a = current->is_a_immediate ? current->val_a.num_val : intr->variables[(int) current->val_a.base];
-                int64_t val_b = current->is_b_immediate ? current->val_b.num_val : intr->variables[(int) current->val_b.base];
-
-                intr->is_greater = (val_a > val_b);
-                intr->is_equal   = (val_a == val_b);
-                intr->is_less    = (val_a < val_b);
-
-                current = current->next;
-                break;
-            }
-
-            case CMD_CMP_U: {
-                uint64_t val_a = current->is_a_immediate ? (uint64_t) current->val_a.num_val : (uint64_t) intr->variables[(int) current->val_a.base];
-                uint64_t val_b = current->is_b_immediate ? (uint64_t) current->val_b.num_val : (uint64_t) intr->variables[(int) current->val_b.base];
-
-                intr->is_greater = (val_a > val_b);
-                intr->is_equal   = (val_a == val_b);
-                intr->is_less    = (val_a < val_b);
-
-                current = current->next;
-                break;
-            }
-
-            case CMD_PRINT: {
-                const char *base = current->val_a.str_val;
-                int64_t value = current->is_b_immediate ? current->val_b.num_val : intr->variables[(int) current->val_b.base];
-
-                if (base[0] == 'd') {
-                    printf("%" PRId64 "\n", value); 
-                } else if (base[0] == 'x') {
-                    printf("%" PRIx64 "\n", (uint64_t) value); 
-                } else if (base[0] == 'b') {
-                    for (int i = 63; i >= 0; i--) {
-                        printf("%c", (value & ((int64_t) 1 << i)) ? '1' : '0');
-                    }
-                    printf("\n");
-                } else {
-                    intr->had_error = true;
-                }
-
-                current = current->next;
-                break;
-            }
-
+            // STUDENT TODO: process the commands and take actions as appropriate
             default:
-                intr->had_error = true;
-                current = current->next;
                 break;
         }
     }
@@ -156,11 +84,8 @@ void print_interpreter_state(Interpreter *intr) {
  * @return The fetched value.
  */
 static int64_t fetch_number_value(Interpreter *intr, Operand *op, bool is_im) {
-    if (is_im) {
-        return op->num_val;  // Return the immediate value
-    } else {
-        return intr->variables[op->num_val];  // Return the value from the variable
-    }
+    // STUDENT TODO: Fetch either a variable from the interpreter's state or directly output a value
+    return -1;
 }
 
 /**
