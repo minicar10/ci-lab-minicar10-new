@@ -215,7 +215,6 @@ static bool parse_imm(Parser *parser, Operand *op) {
     }
 
     uint64_t value = 0;
-
     if (token->length >= 2 && token->lexeme[0] == '0') {
         if (token->lexeme[1] == 'x' || token->lexeme[1] == 'X') {
             for (int i = 2; i < token->length; i++) {
