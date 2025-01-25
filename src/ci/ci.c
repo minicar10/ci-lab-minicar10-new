@@ -187,8 +187,8 @@ static int run_file(const char *src, bool print_lex, bool print_parse) {
     Interpreter i;
     interpreter_init(&i, &lbm);
     interpret(&i, commands);
-    print_interpreter_state(&i);
-    mem_print();
+    // print_interpreter_state(&i);
+    // mem_print();
 
     free_command(commands);
     label_map_free(&lbm);

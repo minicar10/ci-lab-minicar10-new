@@ -1,9 +1,22 @@
 #include "command.h"
 #include <inttypes.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 void free_command(Command *command) {
-    // STUDENT TODO: Free the command and all its children
+    while (command) {
+        Command *next = command->next;
+
+        if (command->is_a_string && command->val_a.str_val) {
+            free(command->val_a.str_val);
+        }
+        if (command->is_b_string && command->val_b.str_val) {
+            free(command->val_b.str_val);
+        }
+
+        free(command);
+        command = next;
+    }
 }
 
 void print_command(Command *cmd) {

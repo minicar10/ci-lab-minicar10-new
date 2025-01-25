@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2059
+# shellcheck disable=SC2086
+
+# constants
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+
+echo "running make clean"
+
+#make clean > /dev/null
+
+echo "running make"
+
+#make all > /dev/null
+
+if [[ ! -x testcases ]]; then
+    printf "${RED}❌ couldn't find testcases folder!${NC}"
+    exit 1
+fi
+
+if [[ ! -x bin/ci ]]; then
+    printf "${RED}❌ couldn't find ci executable!${NC}"
+    exit 1
+fi
+
+if [[ ! -x ci_reference ]]; then
+    printf "${RED}❌ couldn't find ci_reference executable!${NC}"
+    exit 1
+fi
+
+run_tests () {
+    failed=0
+    passed=0
+    for testcase in "$1"/*.s; do
+        echo "testing: $testcase"
+        if [[ -z $(diff <(bin/ci -i "$testcase") <(ci_reference -i "$testcase")) ]]; then
+            passed=$((passed+1))
+            printf "✅ ${GREEN}passed testcase $(basename $testcase)${NC}\n"
+        else
+            failed=$((failed+1))
+            printf "❌ ${RED}FAILED testcase $(basename $testcase)${NC}\n"
+        fi
+    done
+
+    echo "testing done! passed $passed cases, failed $failed (total: $((passed+failed)))"
+    printf "score: %.2f/3.0\n" "$(echo "scale=20; $passed/($passed+$failed) * 3.0" | bc)"
+}
+
+run_all_tests () {
+    failed=0
+    passed=0
+    for testcase in testcases/*/*.s; do
+        echo "testing: $testcase"
+        if [[ -z $(diff <(bin/ci -i "$testcase") <(ci_reference -i "$testcase")) ]]; then
+            passed=$((passed+1))
+            printf "✅ ${GREEN}passed testcase ${testcase#testcases/}${NC}\n"
+        else
+            failed=$((failed+1))
+            printf "❌ ${RED}FAILED testcase ${testcase#testcases/}${NC}\n"
+        fi
+    done
+
+    echo "testing done! passed $passed cases, failed $failed (total: $((passed+failed)))"
+}
+case "$1" in
+    "week2")
+        echo "running tests for week 2"
+        run_tests testcases/week2 ;;
+    "week3")
+        echo "running tests for week 3"
+        run_tests testcases/week3 ;;
+    "week4")
+        echo "running tests for week 4"
+        run_tests testcases/week4 ;;
+    "all")
+        echo "running all tests"
+        run_all_tests ;;
+    *)
+        echo "no option specified, running all tests"
+        valgrind_to_test="all"
+        run_all_tests;;
+esac
+
+run_valgrind_tests () {
+    if [ "$1" = "" ] || [ "$1" = "all" ] || [ -v valgrind_to_test ]; then
+        failed=0
+        passed=0
+        for testcase in testcases/*/*.s; do
+            echo "testing: $testcase"
+            if valgrind --error-exitcode=1 --leak-check=full --show-leak-kinds=all --track-origins=yes bin/ci -i "$testcase" 2>&1 >/dev/null | grep -q 'ERROR SUMMARY: 0 errors from 0 contexts' ; then
+                passed=$((passed+1))
+                printf "✅ ${GREEN}passed testcase $(basename $testcase)${NC}\n"
+            else
+                failed=$((failed+1))
+                printf "❌ ${RED}FAILED testcase $(basename $testcase)${NC}\n"
+            fi        done
+
+    echo "testing done! passed $passed cases, failed $failed (total: $((passed+failed)))"
+
+    else
+        failed=0
+        passed=0
+        for testcase in testcases/"$1"/*.s; do
+            echo "testing: $testcase"
+            if valgrind --error-exitcode=1 --leak-check=full --show-leak-kinds=all --track-origins=yes bin/ci -i "$testcase" 2>&1 >/dev/null | grep -q 'ERROR SUMMARY: 0 errors from 0 contexts' ; then
+                passed=$((passed+1))
+                printf "✅ ${GREEN}passed testcase $(basename $testcase)${NC}\n"
+            else
+                failed=$((failed+1))
+                printf "❌ ${RED}FAILED testcase $(basename $testcase)${NC}\n"
+            fi
+        done
+
+        echo "testing done! passed $passed cases, failed $failed (total: $((passed+failed)))"
+        printf "score: %.2f/1.00\n" "$(echo "scale=20; $passed/($passed+$failed)" | bc)"
+    fi 
+}
+
+printf 'run valgrind tests? (y or n) '
+read -r answer
+case "$answer" in
+    y|Y|yes|YES)
+        run_valgrind_tests "$1"
+        ;;
+    n|N|no|NO)
+        echo no
+        exit 0
+        ;;
+    *)
+        echo "invalid response provided, exiting..."
+        exit 1
+        ;;
+esac
